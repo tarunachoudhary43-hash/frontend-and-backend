@@ -1,0 +1,1 @@
+- [x] Update baseURL in Frontend/src/services/api.js to 'https://frontend-and-backend-06ba.onrender.com/api'
