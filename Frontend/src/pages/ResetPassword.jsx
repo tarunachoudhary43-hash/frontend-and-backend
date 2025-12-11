@@ -6,7 +6,7 @@ export default function ResetPassword() {
   const { token } = useParams();
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState('');
-  const [isError, setIsError] = useState(true); // track message type
+  const [isError, setIsError] = useState(true); // track error vs success
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
 
@@ -37,12 +37,8 @@ export default function ResetPassword() {
     setMsg('');
 
     try {
-      // Update this endpoint if your backend has a different path
       const res = await API.post(`/auth/reset-password/${token}`, { password });
-      console.log('Reset response:', res);
-
-      const message =
-        res?.data?.msg || res?.data?.message || 'Password reset successful';
+      const message = res?.data?.msg || 'Password reset successful';
       setMsg(message);
       setIsError(false);
 
@@ -55,11 +51,7 @@ export default function ResetPassword() {
         if (err.response.status === 404) {
           setMsg('Invalid or expired reset link');
         } else {
-          setMsg(
-            err.response.data?.msg ||
-              err.response.data?.message ||
-              `Error: ${err.response.status}`
-          );
+          setMsg(err.response.data?.msg || `Error: ${err.response.status}`);
         }
       } else if (err.request) {
         setMsg('No response from server. Please try again later.');
