@@ -1,7 +1,8 @@
 // server.js - MERN backend setup
 
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') }); // Load .env explicitly
+require('dotenv').config();
+
 
 console.log('Loaded MONGO_URI:', process.env.MONGO_URI); // Debug: should print your Mongo URI
 
