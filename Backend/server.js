@@ -7,17 +7,25 @@ console.log('Loaded MONGO_URI:', process.env.MONGO_URI); // Debug: should print 
 
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db'); // MongoDB connection
+const connectDB = require('./config/db');
 
 // Connect to MongoDB
 connectDB();
 
 const app = express();
 
-// Middleware
+// ---------------------------
+// CORRECTED CORS CONFIG
+// ---------------------------
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*' // Allow frontend URL
+  origin: [
+    "http://localhost:3000",
+    "https://frontend-and-backend-1-2t7r.onrender.com"   // <-- your frontend URL
+  ],
+  credentials: true
 }));
+
+// Middleware
 app.use(express.json());
 
 // Routes
