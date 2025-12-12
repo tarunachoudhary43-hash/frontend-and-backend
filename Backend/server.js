@@ -20,7 +20,7 @@ const app = express();
 // ---------------------------
 app.use(cors({
   origin: [
-    "http://localhost:3000",
+    // "http://localhost:3000",
     "https://frontend-and-backend-1-2t7r.onrender.com"   // <-- your frontend URL
   ],
   credentials: true
