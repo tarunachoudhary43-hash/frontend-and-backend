@@ -8,14 +8,15 @@ module.exports = async function sendEmail(to, subject, resetUrl) {
 
         const email = {
             sender: {
-                email: "tarunachoudhary43@gmail.com", // must be verified in Brevo
+                email: "tarunachoudhary43@gmail.com",
                 name: "Auth System"
             },
             to: [{ email: to }],
             subject,
+
             htmlContent: `
                 <h2>Password Reset</h2>
-                <p>You requested to reset your password.</p>
+                <p>Click the button below to reset your password:</p>
 
                 <a href="${resetUrl}"
                    style="
@@ -30,12 +31,14 @@ module.exports = async function sendEmail(to, subject, resetUrl) {
                    Reset Password
                 </a>
 
-                <p style="margin-top:20px">
-                  This link expires in 15 minutes.
-                </p>
+                <p>This link expires in 15 minutes.</p>
+            `,
 
-                <p>If you didn’t request this, ignore this email.</p>
-            `
+            // 🔥 IMPORTANT FIX
+            tracking: {
+                click: false,
+                open: false
+            }
         };
 
         await apiInstance.sendTransacEmail(email);
