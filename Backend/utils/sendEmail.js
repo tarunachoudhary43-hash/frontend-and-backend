@@ -1,29 +1,48 @@
 const Brevo = require('@getbrevo/brevo');
 
-module.exports = async function sendEmail(to, subject, text) {
+module.exports = async function sendEmail(to, subject, resetUrl) {
     try {
         const apiInstance = new Brevo.TransactionalEmailsApi();
+        apiInstance.authentications['apiKey'].apiKey =
+            process.env.BREVO_API_KEY;
 
-        // Your Brevo API key
-        apiInstance.authentications['apiKey'].apiKey = process.env.BREVO_API_KEY;
-
-        // Your verified sender email from Brevo
         const email = {
-            sender: { 
-                email: "tarunachoudhary43@gmail.com",  // <-- YOU PUT YOUR EMAIL HERE
+            sender: {
+                email: "tarunachoudhary43@gmail.com", // must be verified in Brevo
                 name: "Auth System"
             },
-            to: [{ email: to }],  // <-- USER'S EMAIL WHO WILL RECEIVE RESET LINK
-            subject: subject,
-            textContent: text,
+            to: [{ email: to }],
+            subject,
+            htmlContent: `
+                <h2>Password Reset</h2>
+                <p>You requested to reset your password.</p>
+
+                <a href="${resetUrl}"
+                   style="
+                     display:inline-block;
+                     padding:12px 24px;
+                     background:#4CAF50;
+                     color:#fff;
+                     text-decoration:none;
+                     border-radius:6px;
+                     font-weight:bold;
+                   ">
+                   Reset Password
+                </a>
+
+                <p style="margin-top:20px">
+                  This link expires in 15 minutes.
+                </p>
+
+                <p>If you didn’t request this, ignore this email.</p>
+            `
         };
 
         await apiInstance.sendTransacEmail(email);
-        console.log("Reset email sent to:", to);
         return true;
 
-    } catch (error) {
-        console.error("Email error:", error);
+    } catch (err) {
+        console.error("Email error:", err);
         return false;
     }
 };

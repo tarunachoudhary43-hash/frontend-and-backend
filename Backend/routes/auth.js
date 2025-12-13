@@ -1,89 +1,87 @@
 const express = require('express');
-const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
 
-// ----------------------
-// SIGNUP
-// ----------------------
+const router = express.Router();
+
+/* =====================
+   SIGNUP
+===================== */
 router.post('/signup', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const userExists = await User.findOne({ email });
-        if (userExists) return res.status(400).json({ msg: "User already exists" });
+        if (!email || !password)
+            return res.status(400).json({ msg: "All fields required" });
+
+        const exists = await User.findOne({ email });
+        if (exists)
+            return res.status(400).json({ msg: "User already exists" });
 
         const hashed = await bcrypt.hash(password, 10);
 
-        const user = await User.create({
-            email,
-            password: hashed
-        });
+        await User.create({ email, password: hashed });
 
-        res.json({ msg: "Signup successful", user });
+        res.json({ msg: "Signup successful" });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ msg: "Server error" });
     }
 });
 
-// ----------------------
-// SIGNIN
-// ----------------------
+/* =====================
+   SIGNIN
+===================== */
 router.post('/signin', async (req, res) => {
     try {
         const { email, password } = req.body;
 
         const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ msg: "User not found" });
+        if (!user)
+            return res.status(400).json({ msg: "Invalid credentials" });
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
+        const match = await bcrypt.compare(password, user.password);
+        if (!match)
+            return res.status(400).json({ msg: "Invalid credentials" });
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: "1d"
-        });
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
 
         res.json({ msg: "Signin successful", token });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ msg: "Server error" });
     }
 });
 
-/// ----------------------
-// FORGOT PASSWORD
-// ----------------------
+/* =====================
+   FORGOT PASSWORD
+===================== */
 router.post('/forgot', async (req, res) => {
     try {
         const { email } = req.body;
 
         const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ msg: "User not found" });
+        if (!user)
+            return res.status(400).json({ msg: "User not found" });
 
-        // Create a 15-minute reset token
         const token = jwt.sign(
             { id: user._id },
             process.env.JWT_SECRET,
             { expiresIn: "15m" }
         );
 
-        // Correct reset URL for frontend
-        const link = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+        const resetUrl =
+            `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
-        const message = `
-You requested to reset your password.
-
-Click the link below to reset it:
-${link}
-
-This link expires in 15 minutes.
-If you did not request this, ignore this email.
-        `;
-
-        await sendEmail(email, "Password Reset", message);
+        await sendEmail(email, "Reset Your Password", resetUrl);
 
         res.json({ msg: "Password reset email sent" });
 
@@ -93,19 +91,23 @@ If you did not request this, ignore this email.
     }
 });
 
-// ----------------------
-// RESET PASSWORD
-// ----------------------
-router.post('/reset-password/:token', async (req, res) => {
+/* =====================
+   RESET PASSWORD
+===================== */
+router.post('/reset-password', async (req, res) => {
     try {
-        const { token } = req.params;
-        const { password } = req.body;
+        const { token, password } = req.body;
+
+        if (!token || !password)
+            return res.status(400).json({ msg: "Invalid request" });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         const hashed = await bcrypt.hash(password, 10);
 
-        await User.findByIdAndUpdate(decoded.id, { password: hashed });
+        await User.findByIdAndUpdate(decoded.id, {
+            password: hashed
+        });
 
         res.json({ msg: "Password reset successful" });
 
